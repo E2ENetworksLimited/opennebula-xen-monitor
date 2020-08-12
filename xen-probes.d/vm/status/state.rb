@@ -23,35 +23,29 @@ def print_info(name, value)
     puts "#{name}=#{value}"
 end
 
-xenstore_text=`#{XENSTORE_PATH} -f /local/domain/0/device-model | grep state`
-exit(-1) if $?.exitstatus != 0
-
-lines=xenstore_text.split("\n")
+xenstore_text=`#{XENSTORE_PATH} -f /`
+                                # [^0] -> exclude dom0
+                                # (?<xxx>) -> only returns grouped exprs
+regex = Regexp.new('^/local/domain/0/device-model/(?<domid>[^0][0-9]+)/state = (?<state>.*)')
+hosts_states = xenstore_text.scan(regex)
+exit(-1) if hosts_states.nil? or hosts_states.empty?
 
 begin
-    lines.each {|line|
-        l=line.strip.split
-        domid = l[0].split("/")[-2]
-        state = l[2].upcase
-
-        # We only need VM stats not Dom-0
-        if domid == "0"
-            next
-        end
-
-        xenstore_text=`#{XENSTORE_PATH} -f /local/domain/#{domid} | grep name`
-        vm_name = xenstore_text.strip.split[2].gsub('"', '')
+    hosts_states.each{|domid, state|
+        # VM name
+        regex = Regexp.new("^/local/domain/#{domid}/name = (?<val>.*)")
+        vm_name = xenstore_text.match(regex)[:val].gsub('"', '')
         vm_id = vm_name.split("one-")[1].sub('"', '')
+        # UUID
+        regex = Regexp.new("^/local/domain/#{domid}/vm = (?<val>.*)")
+        uuid = xenstore_text.match(regex)[:val].split("/")[2].gsub('"', '')
 
-        xenstore_text=`#{XENSTORE_PATH} -f /local/domain/#{domid} | grep vm`
-        uuid = xenstore_text.strip.split[2].split("/")[2].sub('"', '')
-
-        print "VM = [ "         # open VM block
+        print "VM = [ "             # open the VM block
         print 'ID=' + vm_id
         print ', DEPLOY_ID=' + domid
         print ', UUID=' + '"' + uuid + '"'
-        print ', STATE=' + state
-        print " ]\n"            # end VM block
+        print ', STATE=' + state.upcase
+        print " ]\n"             # end the VM block
     }
 rescue  StandardError => e
     puts e

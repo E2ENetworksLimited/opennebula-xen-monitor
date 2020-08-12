@@ -52,7 +52,7 @@ memory_info_line=xentop_text[1]
 domains_info=valid_lines[first_domain..-1]
 
 # DOMAINS LINES
-
+xenstore_text=`#{XENSTORE_PATH} -f /`
 domains_info.each {|line|
     stats = Hash.new
 
@@ -63,13 +63,14 @@ domains_info.each {|line|
         next
     end
 
+    vm_name = l[0]
     vm_id = l[0].split("one-")[1]
 
-    xenstore_text=`#{XENSTORE_PATH} -f /vm | grep name | grep #{l[0]}`
-    uuid = xenstore_text.strip.split("/")[2]
+    regex = Regexp.new("^/local/domain/(?<domid>[^0][0-9]+)/name = \"#{vm_name}\"")
+    domid = xenstore_text.match(regex)[:domid]
 
-    xenstore_text=`#{XENSTORE_PATH} -f /local/domain | grep name | grep #{l[0]}`
-    domid=xenstore_text.strip.split("/")[3]
+    regex = Regexp.new("^/local/domain/#{domid}/vm = (?<val>.*)")
+    uuid = xenstore_text.match(regex)[:val].split("/")[2].gsub('"', '')
 
     print "VM = [ "             # open the VM block
     print 'ID="' + vm_id + '"'
