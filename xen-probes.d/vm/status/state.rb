@@ -28,7 +28,7 @@ xenstore_text=`#{XENSTORE_PATH} -f /`
                                 # (?<xxx>) -> only returns grouped exprs
 regex = Regexp.new('^/local/domain/0/device-model/(?<domid>[^0][0-9]+)/state = (?<state>.*)')
 hosts_states = xenstore_text.scan(regex)
-exit(-1) if hosts_states.nil? or hosts_states.empty?
+exit(0) if hosts_states.nil? or hosts_states.empty?
 
 begin
     hosts_states.each{|domid, state|
@@ -50,3 +50,5 @@ begin
 rescue  StandardError => e
     puts e
 end
+
+exit(0)

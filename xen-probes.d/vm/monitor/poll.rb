@@ -94,3 +94,5 @@ domains_info.each {|line|
     print ', MONITOR=' + '"' + Base64.strict_encode64(monitor) + '"'
     print " ]\n"  # close VM block
 }
+
+exit(0)
