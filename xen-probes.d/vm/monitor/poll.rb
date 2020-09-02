@@ -66,7 +66,7 @@ domains_info.each {|line|
     vm_name = l[0]
     vm_id = l[0].split("one-")[1]
 
-    regex = Regexp.new("^/local/domain/(?<domid>[^0][0-9]+)/name = \"#{vm_name}\"")
+    regex = Regexp.new("^/local/domain/(?<domid>[^0]+)/name = \"#{vm_name}\"")
     domid = xenstore_text.match(regex)[:domid]
 
     regex = Regexp.new("^/local/domain/#{domid}/vm = (?<val>.*)")
