@@ -22,13 +22,6 @@ require "base64"
 XENTOP_PATH="sudo /usr/sbin/xentop"
 XENSTORE_PATH="sudo /usr/bin/xenstore-ls"
 
-dir=File.basename(Dir.pwd)
-
-def print_info(name, value)
-    value = "0" if value.nil? or value.to_s.strip.empty?
-    puts "#{name}=#{value}"
-end
-
 xentop_text=`#{XENTOP_PATH} -bi2 --full-name`
 exit(-1) if $?.exitstatus != 0
 

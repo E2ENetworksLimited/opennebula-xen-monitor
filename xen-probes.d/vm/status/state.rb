@@ -18,11 +18,6 @@
 
 XENSTORE_PATH="sudo /usr/bin/xenstore-ls"
 
-def print_info(name, value)
-    value = "0" if value.nil? or value.to_s.strip.empty?
-    puts "#{name}=#{value}"
-end
-
 xenstore_text=`#{XENSTORE_PATH} -f /`
                                 # [^0] -> exclude dom0
                                 # (?<xxx>) -> only returns grouped exprs
