@@ -40,8 +40,6 @@ valid_lines.each_with_index{ |l,i|
     end
 }
 
-domain_info_line=xentop_text[0]
-memory_info_line=xentop_text[1]
 domains_info=valid_lines[first_domain..-1]
 
 # DOMAINS LINES
@@ -59,10 +57,10 @@ domains_info.each {|line|
     vm_name = l[0]
     vm_id = l[0].split("one-")[1]
 
-    regex = Regexp.new("^/local/domain/(?<domid>[^0]+)/name = \"#{vm_name}\"")
+    regex = Regexp.new("/local/domain/(?<domid>[0-9]+)/name = \"#{vm_name}\"")
     domid = xenstore_text.match(regex)[:domid]
 
-    regex = Regexp.new("^/local/domain/#{domid}/vm = (?<val>.*)")
+    regex = Regexp.new("/local/domain/#{domid}/vm = (?<val>.*)")
     uuid = xenstore_text.match(regex)[:val].split("/")[2].gsub('"', '')
 
     print "VM = [ "             # open the VM block
