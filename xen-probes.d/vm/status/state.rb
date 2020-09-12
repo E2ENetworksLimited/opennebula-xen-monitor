@@ -21,12 +21,16 @@ XENSTORE_PATH="sudo /usr/bin/xenstore-ls"
 xenstore_text=`#{XENSTORE_PATH} -f /`
                                 # [^0] -> exclude dom0
                                 # (?<xxx>) -> only returns grouped exprs
-regex = Regexp.new('^/local/domain/0/device-model/(?<domid>[^0][0-9]+)/state = (?<state>.*)')
+regex = Regexp.new('^/local/domain/0/device-model/(?<domid>[0-9]+)/state = (?<state>.*)')
 hosts_states = xenstore_text.scan(regex)
 exit(0) if hosts_states.nil? or hosts_states.empty?
 
 begin
     hosts_states.each{|domid, state|
+        if domid == "0"
+            next
+        end
+
         # VM name
         regex = Regexp.new("^/local/domain/#{domid}/name = (?<val>.*)")
         vm_name = xenstore_text.match(regex)[:val].gsub('"', '')
