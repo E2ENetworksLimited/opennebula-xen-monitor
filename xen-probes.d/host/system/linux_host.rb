@@ -16,6 +16,27 @@
 # limitations under the License.                                             #
 #--------------------------------------------------------------------------- #
 
-require_relative '../../../lib/linux'
+INFO="sudo /usr/sbin/xl info"
 
-LinuxHost.config('xen')
+info_text=`#{INFO}`
+
+puts "HYPERVISOR=xen"
+
+ncpu_text = info_text.match('^nr_cpus[ ]*:[ ]*(?<ncpu>[0-9]+)')
+if info_text.nil?
+    puts "Error: cannot find NCPUs"
+end
+puts "TOTALCPU=" + (ncpu_text[:ncpu].to_i * 100).to_s
+
+cpuspeed_text = info_text.match('^cpu_mhz[ ]*:[ ]*(?<mhz>[0-9]+)')
+if cpuspeed_text.nil?
+    puts "Error: cannot find CPU speed"
+end
+puts "CPUSPEED=" + cpuspeed_text[:mhz]
+
+memory_text = info_text.match('^total_memory[ ]*:[ ]*(?<mem>[0-9]+)')
+if memory_text.nil?
+    puts "Error: cannot find memory information"
+end
+                                                # convert MB to MiB
+puts "TOTALMEMORY=" + ((memory_text[:mem].to_f / 1024) * 1000 * 1000).to_i.to_s
