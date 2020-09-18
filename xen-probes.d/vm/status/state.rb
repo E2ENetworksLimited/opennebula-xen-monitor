@@ -18,7 +18,7 @@
 
 XENSTORE_PATH="sudo /usr/bin/xenstore-ls"
 
-xenstore_text=`#{XENSTORE_PATH} -f /`
+xenstore_text=`#{XENSTORE_PATH} -f /local/domain`
                                 # [^0] -> exclude dom0
                                 # (?<xxx>) -> only returns grouped exprs
 regex = Regexp.new('^/local/domain/0/device-model/(?<domid>[0-9]+)/state = (?<state>.*)')
@@ -33,11 +33,29 @@ begin
 
         # VM name
         regex = Regexp.new("^/local/domain/#{domid}/name = (?<val>.*)")
-        vm_name = xenstore_text.match(regex)[:val].gsub('"', '')
-        vm_id = vm_name.split("one-")[1].sub('"', '')
+        vm_name = xenstore_text.match(regex)
+        if vm_name.nil?
+            puts "=> Error: VM with domid #{domid} not present"
+            next
+        end
+        vm_name = vm_name[:val].gsub('"', '')
+
+        # VM id
+        vm_id = vm_name.split("one-")
+        if vm_id.nil?
+            puts "=> Error: cannot extract domid from #{vm_name}"
+            next
+        end
+        vm_id = vm_id[1].sub('"', '')
+
         # UUID
         regex = Regexp.new("^/local/domain/#{domid}/vm = (?<val>.*)")
-        uuid = xenstore_text.match(regex)[:val].split("/")[2].gsub('"', '')
+        uuid = xenstore_text.match(regex)
+        if uuid.nil?
+          puts "=> Error: cannot find UUID for #{vm_name}"
+          next
+        end
+        uuid = uuid[:val].split("/")[2].gsub('"', '')
 
         print "VM = [ "             # open the VM block
         print 'ID=' + vm_id

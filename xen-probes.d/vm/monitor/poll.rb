@@ -22,28 +22,14 @@ require "base64"
 XENTOP_PATH="sudo /usr/sbin/xentop"
 XENSTORE_PATH="sudo /usr/bin/xenstore-ls"
 
-xentop_text=`#{XENTOP_PATH} -bi2 --full-name`
+xentop_text=`#{XENTOP_PATH} -bi1 --full-name`
 exit(-1) if $?.exitstatus != 0
 
-#xentop_text.gsub!(/^xentop.*^xentop.*?$/m, "") # Strip first top output
-xentop_text.gsub!("no limit", "no_limit")
-
 lines=xentop_text.split("\n")
-
-block_size=lines.length/2
-valid_lines=lines.last(block_size)
-first_domain = -1               # line of the first domain
-valid_lines.each_with_index{ |l,i|
-    if l.match 'NAME  STATE'
-        first_domain=i+1
-        break
-    end
-}
-
-domains_info=valid_lines[first_domain..-1]
+domains_info=lines[1..-1]
 
 # DOMAINS LINES
-xenstore_text=`#{XENSTORE_PATH} -f /`
+xenstore_text=`#{XENSTORE_PATH} -f /local/domain`
 domains_info.each {|line|
     stats = Hash.new
 
@@ -58,10 +44,20 @@ domains_info.each {|line|
     vm_id = l[0].split("one-")[1]
 
     regex = Regexp.new("/local/domain/(?<domid>[0-9]+)/name = \"#{vm_name}\"")
-    domid = xenstore_text.match(regex)[:domid]
+    domid = xenstore_text.match(regex)
+    if domid.nil?
+        puts "=> Error: cannot find domid for #{vm_name}"
+        next
+    end
+    domid = domid[:domid]
 
     regex = Regexp.new("/local/domain/#{domid}/vm = (?<val>.*)")
-    uuid = xenstore_text.match(regex)[:val].split("/")[2].gsub('"', '')
+    uuid = xenstore_text.match(regex)
+    if uuid.nil?
+        puts "=> Error: cannot find UUID for #{vm_name}"
+        next
+    end
+    uuid = uuid[:val].split("/")[2].gsub('"', '')
 
     print "VM = [ "             # open the VM block
     print 'ID="' + vm_id + '"'
